@@ -1,6 +1,10 @@
 {
-  "dependencies": {
-    "koa": "^2.2.0",
-    "socket.io-stream": "^0.9.1"
+  "dependencies": {},
+  "scripts": {
+    "build": "electron-packager ./ Myapp -all --arch=x64 --version=1.6.10"
+  },
+  "devDependencies": {
+    "express": "^4.15.3",
+    "socket.io": "^2.0.3"
   }
 }

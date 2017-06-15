@@ -18,7 +18,7 @@
             }
             return guid;
         })(),
-            socket = io(`http://${document.domain}:3001`),
+            socket = io(`http://${document.domain}`),
             pc=new(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection)();
 
         function hasUserMedia() {

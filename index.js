@@ -1,59 +1,49 @@
-var express = require('express'),
-    app = express(),
-    server = require('http').createServer(app);
-var wss = require('socket.io/lib')(server);
 
-server.listen(3001);
+const electron = require('electron');
+const {app} = electron;
+// 创建本地浏览器窗口的模块
+const {BrowserWindow} = electron;
 
-app.use(express.static(__dirname))
+// 指向窗口对象的一个全局引用，如果没有这个引用，那么当该javascript对象被垃圾回收的
+// 时候该窗口将会自动关闭
+let win;
 
+function createWindow() {
+  // 创建一个新的浏览器窗口
+  win = new BrowserWindow({width: 800, height: 600});
 
-String.prototype.trim = function () {
-    return this.replace(/(^\s*)|(\s*$)/g, "");
+  // 并且装载应用的index.html页面
+  win.loadURL(`file://${__dirname}/index.html`);
+
+  // // 打开开发工具页面
+  win.webContents.openDevTools();
+
+  // 当窗口关闭时调用的方法
+  win.on('closed', () => {
+    // 解除窗口对象的引用，通常而言如果应用支持多个窗口的话，你会在一个数组里
+    // 存放窗口对象，在窗口关闭的时候应当删除相应的元素。
+    console.log(win)
+    win = null;
+  });
 }
 
-// 存储socket的数组，这里只能有2个socket，每次测试需要重启，否则会出错
-var wscc = {};
+// 当Electron完成初始化并且已经创建了浏览器窗口，则该方法将会被调用。
+// 有些API只能在该事件发生后才能被使用。
+app.on('ready', createWindow);
 
-// 有socket连入
-wss.on('connection', function (ws) {
-    var socketID
-    ws.on('socketId', function (id) {
+// 当所有的窗口被关闭后退出应用
+app.on('window-all-closed', () => {
+  // 对于OS X系统，应用和相应的菜单栏会一直激活直到用户通过Cmd + Q显式退出
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
 
-        socketID = id
-        wscc[id] = ws
-    });
-
-
-
-    // 转发收到的消息
-    ws.on('message', function (message) {
-        for (var a in wscc) {
-            if (socketID !== a) {
-                wscc[a].emit('rtc', message, function (error) {
-                    if (error) {
-                        console.log('Send message error (' + desc + '): ', error);
-                    }
-                });
-            }
-        }
-
-
-
-    });
-    ws.on('con_number', function () {
-        ws.emit('con_number', Object.keys(wscc).length > 1 ? true : false)
-    });
-
-    ws.on('socket_closed', data => {
-        delete wscc[data];
-        console.log( Object.keys(wscc).length)
-        //  ws.emit('socket_closed',data)
-        for (var a in wscc) {
-            if (data !== a) {
-                wscc[a].emit('socket_closed', data)
-            }
-        }
-    });
+app.on('activate', () => {
+  // 对于OS X系统，当dock图标被点击后会重新创建一个app窗口，并且不会有其他
+  // 窗口打开
+  if (win === null) {
+    createWindow();
+  }
 });
 
